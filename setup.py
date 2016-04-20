@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="emitjson",
-    version="0.0.1",
+    version="0.0.2",
     author="Atsuo Ishimoto",
     description="Help composing objects to build JSON.",
     license="MIT",
