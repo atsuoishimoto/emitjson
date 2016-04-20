@@ -4,21 +4,35 @@ emitjson
 
 Help composing objects to emit JSON.
 
-``emitjson.repository()`` creates a standard `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_ to covert objects to JSON-friendly objects. ``repository()`` converts some object types that are not supported by `json module` such as ``set()`` or ``datetime.datetime()``.
+``emitjson.repository()`` creates a repogistory of converter functions, which is a standard `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_ to covert various type of objects to JSON-friendly objects.
 
-You can also add your own converters as `singledispatch function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_.
+The generic function returns a converted object if the type of the object has dispatcher. ``repository()`` contains some dispatchers to converts for types that are not supported by `json module` such as ``set()`` or ``datetime.datetime()``. Also, default deispacher returns (shallow) copies of standard container types such as ``collections.abc.Mapping`` or ``collection.abc.Sequence``. Items in the container object are also converted recursively.
 
 ::
 
-    import emitjson
-    import base64
+    >>> import datetime
+    >>> import emitjson
+    >>> my_repo = emitjson.repository()  # create emitjson repository
+    >>> src = [1, 2, datetime.datetime.now(), {4, 5, 6}]
+    >>> new = my_repo(src)
+    >>> print(new)
+    (1, 2, '2016-04-20T22:09:18.731157', (4, 5, 6))
 
-    my_repo = emitjson.repository()  # create emitjson repository
 
-    @myrepo.register(bytes)
-    def conv_bytes(obj):
-        # encode bytes object in Base64 format
-        return base64.b64encode(obj).decode('ascii')
+You can add your own converters as `singledispatch function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_. Following example add a converter to generate Base64 strings from ``bytes`` objects.
+
+::
+
+    >>> import emitjson
+    >>> import base64
+    >>> my_repo = emitjson.repository()  # create emitjson repository
+    >>> @my_repo.register(bytes)
+    >>> def conv_bytes(obj):
+    ...    # encode bytes object in Base64 format
+    ...    return base64.b64encode(obj).decode('ascii')
+    ...
+    >>> print(my_repo([b'abcd']))
+    ('YWJjZA==', )
 
 You can also define mapper class to convert objects to dictionary.
 
@@ -57,30 +71,31 @@ Functions
 =============
 
 
-@emitjson.repository
---------------------
+@repository()
+------------------------
 
-Returns a `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_ instance.
+Create a repository of object converters. The repository is an instance of the `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_.
 
-``emitjson.repository()`` overrides following types by default.
+The repository overrides following types by default.
 
 - ``collections.abc.Sequence`` objects are converted to ``tuple``. Elements in the sequence are converted recursively.
 
 - Keys and values of the ``collections.abc.Mapping`` are converted recursively.
 
-- ``datetime.date`` and ``datetime.datetime`` objects are converted to `isoformat()` string.
+- ``datetime.date`` and ``datetime.datetime`` objects are converted to ``isoformat()`` string.
 
 
 
-emitjson.ObjConverter class
+ObjConverter class
 ----------------------------------
 
-``emitjson.ObjConverter`` class defines a converter from arbitrary objects to dictionary.
+``ObjConverter`` class defines a converter from an arbitrary object to a dictionary. The ``attr`` type attributes of ``ObjConverter`` class defines name of attributes to be obtained from source object.
 
-You can register field names of the target object. If an attribute of the ``ObjConverter`` is ``emitjson.attr`` class, converter gets a value from attribute in the same name from the target object. If an attribute is an instance of ``attr`` class, converter gets a value from the attribute specified in the ``attr`` object.
+If an attribute of the ``ObjConverter`` is a ``attr`` instance, `attrname` arguments specifies attribute name to be obtained.
 
-emitjson.attr class
---------------------
+
+attr(attrname, map) class
+----------------------------
 
 Specify name of attribute to get value. The attribute name to get value could be supplied as arguments of ``attr``. See above for examples.
 

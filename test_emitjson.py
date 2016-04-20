@@ -1,6 +1,11 @@
+import datetime, base64, pytest
 from emitjson import repository, ObjConverter, attr
-import datetime, base64
 
+try:
+    import sqlalchemy
+    has_sqlalchemy = True
+except ImportError:
+    has_sqlalchemy = False
 
 myrepo = repository()
 
@@ -52,3 +57,24 @@ def test_class():
     ret = myrepo(Class2())
     assert ret == {'prop_x': ({'prop2': 'HAM', 'prop1': 'spam'},)}
 
+
+@pytest.mark.skipif(not has_sqlalchemy, reason='SQLAlchemy is not installed')
+def test_alchemy():
+    from sqlalchemy import create_engine, Table, Column, Integer
+    from sqlalchemy.ext.declarative import declarative_base
+
+    engine = create_engine('sqlite:///:memory:')
+    Base = declarative_base()
+
+    class Test(Base):
+        __tablename__ = 'test'
+        a = Column(Integer, primary_key=True)
+        b = Column(Integer)
+        c = Column(Integer)
+        d = Column(Integer)
+
+    Base.metadata.create_all(engine)
+    
+    myrepo.fromSQLAlchemyModel(Test, attrs={'bbb':attr('b')}, ignores=['b'])
+    ret = myrepo(Test(a=1, b=2, c=3, d=4))
+    assert ret == {'a': 1, 'bbb': 2, 'c': 3, 'd': 4}
