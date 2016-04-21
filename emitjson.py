@@ -5,12 +5,7 @@ import datetime
 
 
 
-def build_converter(repo, cls, attrs):
-    f = ObjConverter(None, attrs)
-    repo.register(cls, f)
-
-
-def _from_model(repo, model, names, attrs, ignores):
+def build_converter(repo, cls, names, attrs, ignores):
     _attrs = {name:attr for name in names}
     if attrs:
         _attrs.update(attrs)
@@ -19,12 +14,13 @@ def _from_model(repo, model, names, attrs, ignores):
             if name in _attrs:
                 del _attrs[name]
 
-    build_converter(repo, model, _attrs)
+    f = ObjConverter(_attrs)
+    repo.register(cls, f)
 
 
 def repository():
     @singledispatch
-    def converter(obj):
+    def _repogitory(obj):
         return obj
 
     def _register(cls, func=None):
@@ -33,50 +29,49 @@ def repository():
 
         if isinstance(func, type):
             if issubclass(func, ObjConverter):
-                func = func(converter).convert
-        elif isinstance(func, ObjConverter):
-            func.converter = converter
-            func = func.convert
-        return converter.org_register(cls, func)
+                func = func()
 
-    converter.org_register = converter.register
-    converter.register = _register
+        if isinstance(func, ObjConverter):
+            func.repogitory = _repogitory
+            func = func.run
+
+        return _repogitory.org_register(cls, func)
+
+    _repogitory.org_register = _repogitory.register
+    _repogitory.register = _register
 
     def fromSQLAlchemyModel(model, attrs=None, ignores=None):
         names = [col.name for col in model.__table__.columns]
-        _from_model(converter, model, names, attrs, ignores)
+        build_converter(_repogitory, model, names, attrs, ignores)
 
-    converter.fromSQLAlchemyModel = fromSQLAlchemyModel
+    _repogitory.fromSQLAlchemyModel = fromSQLAlchemyModel
 
 
     def fromDjangoModel(model, attrs, ignore):
-        _from_model(converter, model, model._meta.get_all_field_names(), attrs, ignores)
-
-    converter.fromDjangoModel = fromDjangoModel
-
+        build_converter(_repogitory, model, model._meta.get_all_field_names(),
+                    attrs, ignores)
+    _repogitory.fromDjangoModel = fromDjangoModel
 
     def raw(obj):
         return obj
-
-    converter.register(str, raw)
+    _repogitory.register(str, raw)
 
     def conv_seq(obj):
-        return tuple(converter(o) for o in obj)
+        return tuple(_repogitory(o) for o in obj)
 
-    converter.register(abc.Sequence, conv_seq)
-    converter.register(abc.Set, conv_seq)
+    _repogitory.register(abc.Sequence, conv_seq)
+    _repogitory.register(abc.Set, conv_seq)
 
-    @converter.register(abc.Mapping)
+    @_repogitory.register(abc.Mapping)
     def conv_mapping(obj):
-        return {converter(k):converter(v) for k, v in obj.items()}
+        return {_repogitory(k):_repogitory(v) for k, v in obj.items()}
 
     def conv_date(obj):
         return obj.isoformat()
+    _repogitory.register(datetime.date, conv_date)
+    _repogitory.register(datetime.datetime, conv_date)
 
-    converter.register(datetime.date, conv_date)
-    converter.register(datetime.datetime, conv_date)
-
-    return converter
+    return _repogitory
 
 
 class attr:
@@ -92,10 +87,8 @@ class attr:
             ret = self.map(ret)
         return ret
 
-
 class ObjConverter:
-    def __init__(self, converter, attrs=None):
-        self.converter = converter
+    def __init__(self, attrs=None, loaders=()):
         self.attrs = {}
         if attrs:
             for name, value in attrs.items():
@@ -111,8 +104,14 @@ class ObjConverter:
             if isinstance(value, attr):
                 self.attrs[name] = value
 
-    def convert(self, obj):
-        ret = {}
+        self.loaders = loaders[:]
+
+    def on_convert(self, obj, values):
         for name, f in self.attrs.items():
-            ret[name] = f.convert(obj, name)
-        return self.converter(ret)
+            values[name] = f.convert(obj, name)
+
+    def run(self, obj):
+        values = {}
+        self.on_convert(obj, values)
+        return self.repogitory(values)
+

@@ -97,6 +97,24 @@ If an attribute of the ``ObjConverter`` is an instance of ``attr``, `attrname` a
 
 Resulting dict objects are also converted recursively.
 
+ObjConverter.on_convert(obj, values)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``on_convert`` method is called to obtain attribute of ``obj`` and store the value to the ``values`` dictionary. You can override ``on_convert()`` method to customize conversion.
+
+::
+
+    class Class3:
+        prop = 1
+
+    @myrepo.register(Class3)
+    class Class3Converter(ObjConverter):
+        def on_convert(self, obj, values):
+            super().on_convert(obj, values)
+            values['dynamic_prop'] = obj.prop
+
+    print(myrepo(Class3())  # prints {'dynamic_prop': 1}
+
 
 attr(attrname=None, map=None) class
 ---------------------------------------------

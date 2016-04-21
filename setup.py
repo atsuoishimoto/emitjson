@@ -7,7 +7,7 @@ def read(fname):
 
 setup(
     name="emitjson",
-    version="0.0.2",
+    version="0.0.3",
     author="Atsuo Ishimoto",
     description="Help composing objects to build JSON.",
     license="MIT",
@@ -16,7 +16,7 @@ setup(
     long_description=read('README.rst'),
     classifiers=[
         "Programming Language :: Python :: 3.4",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],

@@ -58,6 +58,22 @@ def test_class():
     assert ret == {'prop_x': ({'prop2': 'HAM', 'prop1': 'spam'},)}
 
 
+class Class3:
+    def __init__(self):
+        self.prop = 1
+
+
+@myrepo.register(Class3)
+class Class3Converter(ObjConverter):
+    def on_convert(self, obj, values):
+        super().on_convert(obj, values)
+        values['dynamic_prop'] = obj.prop
+
+def test_customize():
+    ret = myrepo(Class3())
+    assert ret == {'dynamic_prop': 1}
+
+
 @pytest.mark.skipif(not has_sqlalchemy, reason='SQLAlchemy is not installed')
 def test_alchemy():
     from sqlalchemy import create_engine, Table, Column, Integer
@@ -78,3 +94,5 @@ def test_alchemy():
     myrepo.fromSQLAlchemyModel(Test, attrs={'bbb':attr('b')}, ignores=['b'])
     ret = myrepo(Test(a=1, b=2, c=3, d=4))
     assert ret == {'a': 1, 'bbb': 2, 'c': 3, 'd': 4}
+
+
