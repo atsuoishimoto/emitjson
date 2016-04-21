@@ -4,9 +4,9 @@ emitjson
 
 Help composing objects to emit JSON.
 
-``emitjson.repository()`` creates a repogistory of converter functions, which is a standard `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_ to covert various type of objects to JSON-friendly objects.
+``emitjson.repository()`` creates a repogistory of functions to convert various type of objects to JSON-friendly objects. The repository is a `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_  that returns a converted object if the converter for the type is registered. 
 
-The generic function returns a converted object if the type of the object has dispatcher. ``repository()`` contains some dispatchers to converts for types that are not supported by `json module` such as ``set()`` or ``datetime.datetime()``. Also, default deispacher returns (shallow) copies of standard container types such as ``collections.abc.Mapping`` or ``collection.abc.Sequence``. Items in the container object are also converted recursively.
+The repository contains some default converters for types that are not supported by `json module` such as ``set()`` or ``datetime.datetime()``. Also, default repository returns (shallow) copies of standard container types such as ``collections.abc.Mapping`` or ``collection.abc.Sequence``. Items in the container object are also converted recursively.
 
 ::
 
@@ -94,12 +94,14 @@ ObjConverter class
 If an attribute of the ``ObjConverter`` is a ``attr`` instance, `attrname` arguments specifies attribute name to be obtained.
 
 
-attr(attrname, map) class
-----------------------------
+attr(attrname=None, map=None) class
+---------------------------------------------
 
-Specify name of attribute to get value. The attribute name to get value could be supplied as arguments of ``attr``. See above for examples.
+Converts an attribute of object.  
 
-``attr`` also accepts ``map`` argument which is a functon to convert a target object to arbitrary objects.
+``attrname`` overrides the attribute name if not omitted.
+
+``map`` argument which is a functon to convert a target object to arbitrary objects.
 
 Resulting dict objects are also converted recursively.
 
@@ -126,5 +128,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-
