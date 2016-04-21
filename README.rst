@@ -89,9 +89,13 @@ The repository overrides following types by default.
 ObjConverter class
 ----------------------------------
 
-``ObjConverter`` class defines a converter from an arbitrary object to a dictionary. The ``attr`` type attributes of ``ObjConverter`` class defines name of attributes to be obtained from source object.
+``ObjConverter`` class create a converter from an arbitrary object to a dictionary. Values obtained from objects are also converted recursively.
 
-If an attribute of the ``ObjConverter`` is a ``attr`` instance, `attrname` arguments specifies attribute name to be obtained.
+Attribute names to be converted are defined as ``attr`` class members of ``ObjConverter`` class.
+
+If an attribute of the ``ObjConverter`` is an instance of ``attr``, `attrname` arguments specifies attribute name to be converted.
+
+Resulting dict objects are also converted recursively.
 
 
 attr(attrname=None, map=None) class
@@ -103,7 +107,7 @@ Converts an attribute of object.
 
 ``map`` argument which is a functon to convert a target object to arbitrary objects.
 
-Resulting dict objects are also converted recursively.
+
 
 
 Copyright 
