@@ -4,7 +4,7 @@ emitjson
 
 Help composing objects to emit JSON.
 
-``emitjson.repository()`` creates a repogistory of functions to convert various type of objects to JSON-friendly objects. The repository is a `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_  that returns a converted object if the converter for the type is registered. 
+``emitjson.repository()`` creates a repository of functions to convert various type of objects to JSON-friendly objects. The repository is a `single-dispatch generic function <http://docs.python.org/3/library/functools.html#functools.singledispatch>`_  that returns a converted object if the converter for the type is registered.
 
 The repository contains some default converters for types that are not supported by `json module` such as ``set()`` or ``datetime.datetime()``. Also, default repository returns (shallow) copies of standard container types such as ``collections.abc.Mapping`` or ``collection.abc.Sequence``. Items in the container object are also converted recursively.
 
