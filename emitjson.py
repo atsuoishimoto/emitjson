@@ -90,18 +90,18 @@ class attr:
 class ObjConverter:
     def __init__(self, attrs=None, loaders=()):
         self.attrs = {}
-        if attrs:
-            for name, value in attrs.items():
-                if isinstance(value, type):
-                    if issubclass(value, attr):
-                        value = value()
-                self.attrs[name] = value
-
         for name, value in self.__class__.__dict__.items():
             if isinstance(value, type):
                 if issubclass(value, attr):
                     value = value()
             if isinstance(value, attr):
+                self.attrs[name] = value
+
+        if attrs:
+            for name, value in attrs.items():
+                if isinstance(value, type):
+                    if issubclass(value, attr):
+                        value = value()
                 self.attrs[name] = value
 
         self.loaders = loaders[:]
