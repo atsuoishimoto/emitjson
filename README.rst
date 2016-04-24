@@ -126,6 +126,39 @@ Converts an attribute of object.
 ``map`` argument which is a functon to convert a target object to arbitrary objects.
 
 
+SAModelConverter class
+---------------------------------
+
+``SAModelConverter`` class create a converter from an SQLAlchemy model. Columns of the model are converted unless specified in ``IGNORES`` member of the class.
+
+::
+
+    class Test(Base):
+        __tablename__ = 'test'
+        a = Column(Integer, primary_key=True)
+        b = Column(Integer)
+        c = Column(Integer)
+        d = Column(Integer)
+
+    @myrepo.register(Test)
+    class TestModelConverter(SAModelConverter):
+        IGNORES = ('c', 'd')    # ommit Test.c and Test.d
+
+
+repository.fromSQLAlchemyModel(model, attrs=None, ignores=None)
+------------------------------------------------------------------
+
+Another way to register a converter of SQLAlchemy model. Columns of the model are converted unless the name of column is listed in ``ignore`` argument. ``attrs`` is a dictionary of key name and ``attr`` object. 
+
+::
+
+    # Converts Test model
+    myrepo.fromSQLAlchemyModel(Test,
+        attrs={
+            'fld1': attr,           # Emits Test.fld1 as value of 'fld1'
+            'X_VALUE':attr('fld_X') # Emits Test.fld_X as value of 'X_VALUE'
+        },
+        ignores=('fld3', 'fld4')) # ignore Test.fld3 and Test.fld2
 
 
 Copyright 

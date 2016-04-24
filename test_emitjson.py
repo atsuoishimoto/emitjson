@@ -1,5 +1,5 @@
 import datetime, base64, pytest
-from emitjson import repository, ObjConverter, attr
+from emitjson import repository, ObjConverter, attr, SAModelConverter
 
 try:
     import sqlalchemy
@@ -74,8 +74,7 @@ def test_customize():
     assert ret == {'dynamic_prop': 1}
 
 
-@pytest.mark.skipif(not has_sqlalchemy, reason='SQLAlchemy is not installed')
-def test_alchemy():
+def sa_model():
     from sqlalchemy import create_engine, Table, Column, Integer
     from sqlalchemy.ext.declarative import declarative_base
 
@@ -90,9 +89,25 @@ def test_alchemy():
         d = Column(Integer)
 
     Base.metadata.create_all(engine)
-    
+    return Test
+
+@pytest.mark.skipif(not has_sqlalchemy, reason='SQLAlchemy is not installed')
+def test_alchemy1():
+    Test = sa_model()
+
     myrepo.fromSQLAlchemyModel(Test, attrs={'bbb':attr('b')}, ignores=['b'])
     ret = myrepo(Test(a=1, b=2, c=3, d=4))
     assert ret == {'a': 1, 'bbb': 2, 'c': 3, 'd': 4}
 
 
+@pytest.mark.skipif(not has_sqlalchemy, reason='SQLAlchemy is not installed')
+def test_alchemy_decls():
+    Test = sa_model()
+
+    @myrepo.register(Test)
+    class SA(SAModelConverter):
+        IGNORES = ['b', 'c']
+        prop2 = attr(attrname='b', map=lambda o:o*3)
+
+    ret = myrepo(Test(a=1, b=2, c=3, d=4))
+    assert ret == {'a': 1, 'd': 4, 'prop2': 6}
