@@ -123,13 +123,13 @@ Converts an attribute of object.
 
 ``attrname`` overrides the attribute name if not omitted.
 
-``map`` argument which is a functon to convert a target object to arbitrary objects.
+``map`` argument is a functon to convert a target object to arbitrary objects.
 
 
 SAModelConverter class
 ---------------------------------
 
-``SAModelConverter`` class create a converter from an SQLAlchemy model. Columns of the model are converted unless specified in ``IGNORES`` member of the class.
+``SAModelConverter`` class create a converter from a SQLAlchemy model. Columns of the model are converted unless specified in ``IGNORES`` member of the class.
 
 ::
 
@@ -154,6 +154,37 @@ Another way to register a converter of SQLAlchemy model. Columns of the model ar
 
     # Converts Test model
     myrepo.fromSQLAlchemyModel(Test,
+        attrs={
+            'fld1': attr,           # Emits Test.fld1 as value of 'fld1'
+            'X_VALUE':attr('fld_X') # Emits Test.fld_X as value of 'X_VALUE'
+        },
+        ignores=('fld3', 'fld4')) # ignore Test.fld3 and Test.fld2
+
+
+DjangoModelConverter class
+---------------------------------
+
+``DjangoModelConverter`` class create a converter from a Django model. Columns of the model are converted unless specified in ``IGNORES`` member of the class.
+
+::
+
+    class DjangoModel(models.Model):
+        charattr = models.CharField(max_length=10)
+        intattr = models.IntegerField()
+
+    @myrepo.register(DjangoModel)
+    class TestModelConverter(DjangoModelConverter):
+        pass
+
+repository.fromSQLAlchemyModel(model, attrs=None, ignores=None)
+------------------------------------------------------------------
+
+Another way to register a converter of Django model. Columns of the model are converted unless the name of column is listed in ``ignore`` argument. ``attrs`` is a dictionary of key name and ``attr`` object. 
+
+::
+
+    # Converts Test model
+    myrepo.fromDjangoModel(Test,
         attrs={
             'fld1': attr,           # Emits Test.fld1 as value of 'fld1'
             'X_VALUE':attr('fld_X') # Emits Test.fld_X as value of 'X_VALUE'

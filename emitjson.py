@@ -3,6 +3,16 @@ from collections import abc
 import itertools
 import datetime
 
+def _django_get_all_field_names(model):
+    from itertools import chain
+    from django.db.models import Manager
+    from django.db.models.fields.related import ForeignObjectRel
+
+    return list(set(chain.from_iterable(
+        (field.name, field.attname) if hasattr(field, 'attname') else (field.name,)
+        for field in model._meta.get_fields()
+            if not isinstance(field, ForeignObjectRel)
+    )))
 
 def repository():
     @singledispatch
@@ -32,9 +42,11 @@ def repository():
 
     _repogitory.fromSQLAlchemyModel = fromSQLAlchemyModel
 
-    def fromDjangoModel(model, attrs, ignore):
-        ObjConverter.build(_repogitory, model, model._meta.get_all_field_names(),
+
+    def fromDjangoModel(model, attrs, ignores):
+        ObjConverter.build(_repogitory, model, _django_get_all_field_names(model),
                     attrs, ignores)
+
     _repogitory.fromDjangoModel = fromDjangoModel
 
     def raw(obj):
@@ -112,7 +124,6 @@ class ObjConverter:
                         value = value()
                 self.attrs[name] = value
 
-
     def on_convert(self, obj, values):
         for name, f in self.attrs.items():
             values[name] = f.convert(obj, name)
@@ -120,7 +131,8 @@ class ObjConverter:
     def run(self, obj):
         values = {}
         self.on_convert(obj, values)
-        return self.repogitory(values)
+        ret = self.repogitory(values)
+        return ret
 
 
 class SAModelConverter(ObjConverter):
@@ -128,3 +140,7 @@ class SAModelConverter(ObjConverter):
         names = [col.name for col in target.__table__.columns]
         return {name:attr() for name in names}
 
+class DjangoModelConverter(ObjConverter):
+    def _init_args(self, target):
+        names = _django_get_all_field_names(target)
+        return {name:attr() for name in names}

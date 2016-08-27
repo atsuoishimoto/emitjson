@@ -7,6 +7,12 @@ try:
 except ImportError:
     has_sqlalchemy = False
 
+try:
+    import django
+    has_django = True
+except ImportError:
+    has_django = False
+
 myrepo = repository()
 
 
@@ -111,3 +117,12 @@ def test_alchemy_decls():
 
     ret = myrepo(Test(a=1, b=2, c=3, d=4))
     assert ret == {'a': 1, 'd': 4, 'prop2': 6}
+
+@pytest.mark.skipif(not has_django, reason='Django is not installed')
+def test_alchemy1():
+    Test = sa_model()
+
+    myrepo.fromSQLAlchemyModel(Test, attrs={'bbb':attr('b')}, ignores=['b'])
+    ret = myrepo(Test(a=1, b=2, c=3, d=4))
+    assert ret == {'a': 1, 'bbb': 2, 'c': 3, 'd': 4}
+
