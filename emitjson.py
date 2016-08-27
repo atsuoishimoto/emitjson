@@ -113,16 +113,16 @@ class ObjConverter:
             if isinstance(value, attr):
                 self.attrs[name] = value
 
-        for n in itertools.chain(ignores, getattr(self, 'IGNORES', ())):
-            if n in self.attrs:
-                del self.attrs[n]
-
         if attrs:
             for name, value in attrs.items():
                 if isinstance(value, type):
                     if issubclass(value, attr):
                         value = value()
                 self.attrs[name] = value
+
+        for n in itertools.chain(ignores, getattr(self, 'IGNORES', ())):
+            if n in self.attrs:
+                del self.attrs[n]
 
     def on_convert(self, obj, values):
         for name, f in self.attrs.items():
